@@ -813,18 +813,39 @@
         document.getElementById('contactForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
+            // Collect form data
+            const formData = {
+                email: document.getElementById('email').value,
+                name: document.getElementById('name').value,
+                interest: document.getElementById('interest').value,
+                requirements: document.getElementById('requirements').value,
+                feedback: document.getElementById('feedback').value
+            };
             
             // Simulate form submission
             const submitButton = this.querySelector('button[type="submit"]');
             const originalText = submitButton.textContent;
-            
+
+            // Disable button and show loading state
             submitButton.textContent = 'Submitting...';
             submitButton.disabled = true;
-            
-            // Simulate API call delay
-            setTimeout(() => {
+
+            // google script to store form
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1-al6gp_XViKCA7QI6BSLCxiSk-sY8XDZ7iiB0f0kApqs-Uw139SetqgM5rowXJu8Xg/exec';
+
+             fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',        // Required for Apps Script
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(() => {
+                // Note: mode 'no-cors' returns an opaque response,
+                // so we assume success if no error was thrown
+                // Simulate API call delay
+                //setTimeout(() => {
                 submitButton.textContent = 'Access Requested! ✓';
                 submitButton.style.background = 'linear-gradient(135deg, #10b981, #059669)';
                 
@@ -854,7 +875,19 @@
                     submitButton.style.background = '';
                     successMessage.remove();
                 }, 3000);
-            }, 1500);
+            })
+            //}, 1500);
+            .catch(error => {
+                console.error('Submission error:', error);
+                submitButton.textContent = 'Error — Try Again';
+                submitButton.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        
+                setTimeout(() => {
+                    submitButton.textContent = originalText;
+                    submitButton.style.background = '';
+                    submitButton.disabled = false;
+                }, 3000);
+            });
         });
 
         // Mobile menu toggle
